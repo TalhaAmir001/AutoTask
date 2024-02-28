@@ -1,10 +1,17 @@
 package com.example.autotask;
 
+import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Intent;
+import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
 import android.widget.Toast;
+
+import androidx.core.app.NotificationCompat;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -12,57 +19,15 @@ import java.util.Date;
 import java.util.Locale;
 
 public class BackgroundService extends Service {
-    private Handler handler;
-    private Runnable task;
-    private SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
 
-    @Override
-    public void onCreate() {
-        super.onCreate();
-        handler = new Handler();
-        task = new Runnable() {
-            @Override
-            public void run() {
-                // Execute your code here
-                // For demonstration, let's show a toast message
-                showToast("Task executed at: " + getCurrentDateTime());
-
-                // Reschedule the task for the next execution
-                scheduleNextExecution();
-            }
-        };
-    }
-
+    private Handler handler = new Handler();
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         // Start the task when the service starts
-        scheduleNextExecution();
+//        scheduleNextExecution();
+        startForeground(123, createNotification());
+        handler.postDelayed(taskRunnable, 5000);
         return START_STICKY;
-    }
-
-    private void scheduleNextExecution() {
-        // Get the user-defined date and time
-        Calendar calendar = Calendar.getInstance();
-        calendar.set(Calendar.YEAR, 2024); // Example year
-        calendar.set(Calendar.MONTH, Calendar.FEBRUARY); // Example month (0-11)
-        calendar.set(Calendar.DAY_OF_MONTH, 27); // Example day
-        calendar.set(Calendar.HOUR_OF_DAY, 12); // Example hour in 24-hour format
-        calendar.set(Calendar.MINUTE, 0); // Example minute
-        calendar.set(Calendar.SECOND, 0); // Example second
-
-        // Schedule the task
-        long delay = calendar.getTimeInMillis() - System.currentTimeMillis();
-        if (delay > 0) {
-            handler.postDelayed(task, delay);
-        }
-    }
-
-    private String getCurrentDateTime() {
-        return dateFormat.format(new Date());
-    }
-
-    private void showToast(String message) {
-        Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
     }
 
     @Override
@@ -71,10 +36,34 @@ public class BackgroundService extends Service {
         return null;
     }
 
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        // Remove any pending callbacks to avoid memory leaks
-        handler.removeCallbacks(task);
+    private Runnable taskRunnable = new Runnable() {
+        @Override
+        public void run() {
+            Toast.makeText(getApplicationContext(), "Time has changed!", Toast.LENGTH_SHORT).show();
+            handler.postDelayed(this, 5000);
+        }
+    };
+
+//    @Override
+//    public void onDestroy() {
+//        super.onDestroy();
+//        handler.removeCallbacks(taskRunnable);
+//    }
+private Notification createNotification() {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        NotificationChannel channel = new NotificationChannel("channel_id", "Time Tracking Service", NotificationManager.IMPORTANCE_DEFAULT);
+        NotificationManager notificationManager = getSystemService(NotificationManager.class);
+        notificationManager.createNotificationChannel(channel);
     }
+
+    Intent notificationIntent = new Intent(this, MainActivity.class);
+    PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0);
+
+    return new NotificationCompat.Builder(this, "channel_id")
+            .setContentTitle("Time Tracking Service")
+            .setContentText("Running in the background")
+//            .setSmallIcon(R.drawable.ic_notification)
+            .setContentIntent(pendingIntent)
+            .build();
+}
 }

@@ -17,19 +17,22 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        Service service = new Service() {
-            @Nullable
-            @Override
-            public IBinder onBind(Intent intent) {
-                return null;
-            }
+//        Service service = new Service() {
+//            @Nullable
+//            @Override
+//            public IBinder onBind(Intent intent) {
+//                return null;
+//            }
+//
+//            @Override
+//            public int onStartCommand(Intent intent, int flags, int startId) {
+//                return super.onStartCommand(intent, flags, startId);
+//            }
+//        };
+        BackgroundService service = new BackgroundService();
+        Intent serviceIntent = new Intent(getApplicationContext(), BackgroundService.class);
+        startService(serviceIntent);
 
-            @Override
-            public int onStartCommand(Intent intent, int flags, int startId) {
-                return super.onStartCommand(intent, flags, startId);
-            }
-        };
-
-
+//        service.scheduleNextExecutionFromActivity();
     }
 }
