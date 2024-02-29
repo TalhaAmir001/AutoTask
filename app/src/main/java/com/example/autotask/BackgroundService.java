@@ -31,7 +31,27 @@ public class BackgroundService extends Service {
         startForeground(123, createNotification());
         unixTime = intent.getExtras().getLong("unixTime");
 //        unixTime = intent.getLongExtra("unixTime");
-        handler.postDelayed(taskRunnable, 1000);
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+
+                Date now = new Date();
+                long unixTime1 = now.getTime() / 1000L;
+                if (unixTime1 == unixTime){
+                    Toast.makeText(BackgroundService.this, "wow", Toast.LENGTH_SHORT).show();
+                    String phoneNumber = "923010617687"; // Replace with the phone number you want to send a message to
+                    String message = "Hello, World!"; // Replace with the message you want to send
+
+                    SmsManager smsManager = SmsManager.getDefault();
+                    smsManager.sendTextMessage(phoneNumber, null, message, null, null);
+                    stopSelf();
+                    stopForeground(true);
+
+                }
+//            Toast.makeText(getApplicationContext(), "Unix time is: " + unixTime, Toast.LENGTH_SHORT).show();
+                handler.postDelayed(this, 1000);
+            }
+        }, 1000);
         return START_STICKY;
     }
 
@@ -41,25 +61,25 @@ public class BackgroundService extends Service {
         return null;
     }
 
-    private Runnable taskRunnable = new Runnable() {
-        @Override
-        public void run() {
-
-            Date now = new Date();
-            long unixTime1 = now.getTime() / 1000L;
-            if (unixTime1 == unixTime){
-                Toast.makeText(BackgroundService.this, "wow", Toast.LENGTH_SHORT).show();
-                String phoneNumber = "923010617687"; // Replace with the phone number you want to send a message to
-                String message = "Hello, World!"; // Replace with the message you want to send
-
-                SmsManager smsManager = SmsManager.getDefault();
-                smsManager.sendTextMessage(phoneNumber, null, message, null, null);
-
-            }
-//            Toast.makeText(getApplicationContext(), "Unix time is: " + unixTime, Toast.LENGTH_SHORT).show();
-            handler.postDelayed(this, 1000);
-        }
-    };
+//    private Runnable taskRunnable = new Runnable() {
+//        @Override
+//        public void run() {
+//
+//            Date now = new Date();
+//            long unixTime1 = now.getTime() / 1000L;
+//            if (unixTime1 == unixTime){
+//                Toast.makeText(BackgroundService.this, "wow", Toast.LENGTH_SHORT).show();
+//                String phoneNumber = "923010617687"; // Replace with the phone number you want to send a message to
+//                String message = "Hello, World!"; // Replace with the message you want to send
+//
+//                SmsManager smsManager = SmsManager.getDefault();
+//                smsManager.sendTextMessage(phoneNumber, null, message, null, null);
+//
+//            }
+////            Toast.makeText(getApplicationContext(), "Unix time is: " + unixTime, Toast.LENGTH_SHORT).show();
+//            handler.postDelayed(this, 1000);
+//        }
+//    };
 
 //    @Override
 //    public void onDestroy() {
