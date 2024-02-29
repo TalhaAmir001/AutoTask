@@ -9,6 +9,7 @@ import android.content.Intent;
 import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
+import android.telephony.SmsManager;
 import android.widget.Toast;
 
 import androidx.core.app.NotificationCompat;
@@ -47,7 +48,13 @@ public class BackgroundService extends Service {
             Date now = new Date();
             long unixTime1 = now.getTime() / 1000L;
             if (unixTime1 == unixTime){
-                Toast.makeText(getApplicationContext(), "Unix time is: " + unixTime, Toast.LENGTH_SHORT).show();
+                Toast.makeText(BackgroundService.this, "wow", Toast.LENGTH_SHORT).show();
+                String phoneNumber = "923010617687"; // Replace with the phone number you want to send a message to
+                String message = "Hello, World!"; // Replace with the message you want to send
+
+                SmsManager smsManager = SmsManager.getDefault();
+                smsManager.sendTextMessage(phoneNumber, null, message, null, null);
+
             }
 //            Toast.makeText(getApplicationContext(), "Unix time is: " + unixTime, Toast.LENGTH_SHORT).show();
             handler.postDelayed(this, 1000);
