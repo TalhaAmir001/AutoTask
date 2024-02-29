@@ -30,7 +30,7 @@ public class BackgroundService extends Service {
         startForeground(123, createNotification());
         unixTime = intent.getExtras().getLong("unixTime");
 //        unixTime = intent.getLongExtra("unixTime");
-        handler.postDelayed(taskRunnable, 5000);
+        handler.postDelayed(taskRunnable, 1000);
         return START_STICKY;
     }
 
@@ -49,7 +49,7 @@ public class BackgroundService extends Service {
             if (unixTime1 == unixTime){
                 Toast.makeText(getApplicationContext(), "Unix time is: " + unixTime, Toast.LENGTH_SHORT).show();
             }
-            handler.postDelayed(this, 5000);
+            handler.postDelayed(this, 1000);
         }
     };
 
