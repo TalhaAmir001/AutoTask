@@ -21,11 +21,13 @@ import java.util.Locale;
 public class BackgroundService extends Service {
 
     private Handler handler = new Handler();
+    long unixTime = 0;
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         // Start the task when the service starts
 //        scheduleNextExecution();
         startForeground(123, createNotification());
+        unixTime = intent.getLongExtra("unixTime");
         handler.postDelayed(taskRunnable, 5000);
         return START_STICKY;
     }
@@ -39,10 +41,13 @@ public class BackgroundService extends Service {
     private Runnable taskRunnable = new Runnable() {
         @Override
         public void run() {
-//            Date now = new Date();
-//            long unixTime = now.getTime() / 1000L;
-//            Toast.makeText(getApplicationContext(), "Unix time is: " + unixTime, Toast.LENGTH_SHORT).show();
-//            handler.postDelayed(this, 5000);
+
+            Date now = new Date();
+            long unixTime1 = now.getTime() / 1000L;
+            if (unixTime1 == unixTime){
+                Toast.makeText(getApplicationContext(), "Unix time is: " + unixTime, Toast.LENGTH_SHORT).show();
+            }
+            handler.postDelayed(this, 5000);
         }
     };
 
