@@ -23,7 +23,6 @@ public class BackgroundService extends Service {
 
     private Handler handler = new Handler();
     long unixTime;
-    Date now = new Date();
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         // Start the task when the service starts
@@ -39,11 +38,12 @@ public class BackgroundService extends Service {
                 long unixTime1 = now.getTime() / 1000L;
                 if (unixTime1 == unixTime){
                     Toast.makeText(BackgroundService.this, "wow", Toast.LENGTH_SHORT).show();
-                    String phoneNumber = "923010617687"; // Replace with the phone number you want to send a message to
+                    String phoneNumber = "923167943213"; // Replace with the phone number you want to send a message to
                     String message = "Hello, World!"; // Replace with the message you want to send
 
                     SmsManager smsManager = SmsManager.getDefault();
                     smsManager.sendTextMessage(phoneNumber, null, message, null, null);
+
                     stopSelf();
                     stopForeground(true);
 
