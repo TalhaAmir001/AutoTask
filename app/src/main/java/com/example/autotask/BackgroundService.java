@@ -39,8 +39,9 @@ public class BackgroundService extends Service {
     private Runnable taskRunnable = new Runnable() {
         @Override
         public void run() {
-            Toast.makeText(getApplicationContext(), "Time has changed!", Toast.LENGTH_SHORT).show();
-            handler.postDelayed(this, 5000);
+            SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss", Locale.getDefault());
+            String currentTime = sdf.format(new Date());
+            Toast.makeText(getApplicationContext(), "Current time is: " + currentTime, Toast.LENGTH_SHORT).show();            handler.postDelayed(this, 5000);
         }
     };
 
