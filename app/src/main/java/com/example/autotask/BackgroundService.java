@@ -10,6 +10,7 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
 import android.telephony.SmsManager;
+import android.util.Log;
 import android.widget.Toast;
 
 import androidx.core.app.NotificationCompat;
@@ -45,10 +46,12 @@ public class BackgroundService extends Service {
                     smsManager.sendTextMessage(phoneNumber, null, message, null, null);
 
                     stopSelf();
+//                    stopService(intent);
                     stopForeground(true);
 
                 }
 //            Toast.makeText(getApplicationContext(), "Unix time is: " + unixTime, Toast.LENGTH_SHORT).show();
+                Log.e("run: ", "Testing &*&*&*&*&: "+unixTime1 );
                 handler.postDelayed(this, 1000);
             }
         }, 1000);
@@ -104,4 +107,11 @@ private Notification createNotification() {
             .setContentIntent(pendingIntent)
             .build();
 }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        handler.removeCallbacksAndMessages(null);
+    }
 }
+
