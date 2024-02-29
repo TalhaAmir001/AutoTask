@@ -57,9 +57,18 @@ public class MainActivity extends AppCompatActivity implements TimePickerDialog.
 
     @Override
     public void onTimeSet(TimePicker view, int hourOfDay, int minute) {
-        // Save the time and display it in a Toast message
-        String time = String.format("%02d:%02d", hourOfDay, minute);
-        Toast.makeText(this, "Time selected: " + time, Toast.LENGTH_SHORT).show();
+        // Create a Calendar object with the selected time
+        Calendar calendar = Calendar.getInstance();
+        calendar.set(Calendar.HOUR_OF_DAY, hourOfDay);
+        calendar.set(Calendar.MINUTE, minute);
+        calendar.set(Calendar.SECOND, 0);
+        calendar.set(Calendar.MILLISECOND, 0);
+
+        // Convert the selected time to Unix timestamp
+        long unixTime = calendar.getTimeInMillis() / 1000L;
+
+        // Display the Unix time in a toast message
+        Toast.makeText(this, "Unix time is: " + unixTime, Toast.LENGTH_SHORT).show();
     }
 }
 
