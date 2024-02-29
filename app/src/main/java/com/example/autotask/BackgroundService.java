@@ -22,6 +22,7 @@ public class BackgroundService extends Service {
 
     private Handler handler = new Handler();
     long unixTime = 0;
+    Date now = new Date();
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         // Start the task when the service starts
@@ -43,7 +44,7 @@ public class BackgroundService extends Service {
         @Override
         public void run() {
 
-            Date now = new Date();
+//            Date now = new Date();
             long unixTime1 = now.getTime() / 1000L;
             if (unixTime1 == unixTime){
                 Toast.makeText(getApplicationContext(), "Unix time is: " + unixTime, Toast.LENGTH_SHORT).show();
