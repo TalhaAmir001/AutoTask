@@ -10,7 +10,6 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
 import android.telephony.SmsManager;
-import android.util.Log;
 import android.widget.Toast;
 
 import androidx.core.app.NotificationCompat;
@@ -34,24 +33,20 @@ public class BackgroundService extends Service {
         handler.postDelayed(new Runnable() {
             @Override
             public void run() {
-
                 Date now = new Date();
                 long unixTime1 = now.getTime() / 1000L;
                 if (unixTime1 == unixTime){
-                    Toast.makeText(BackgroundService.this, "wow", Toast.LENGTH_SHORT).show();
-                    String phoneNumber = "923167943213"; // Replace with the phone number you want to send a message to
+                    String phoneNumber = "923010617687"; // Replace with the phone number you want to send a message to
                     String message = "Hello, World!"; // Replace with the message you want to send
 
                     SmsManager smsManager = SmsManager.getDefault();
                     smsManager.sendTextMessage(phoneNumber, null, message, null, null);
 
                     stopSelf();
-//                    stopService(intent);
                     stopForeground(true);
 
                 }
 //            Toast.makeText(getApplicationContext(), "Unix time is: " + unixTime, Toast.LENGTH_SHORT).show();
-                Log.e("run: ", "Testing &*&*&*&*&: "+unixTime1 );
                 handler.postDelayed(this, 1000);
             }
         }, 1000);
@@ -64,54 +59,27 @@ public class BackgroundService extends Service {
         return null;
     }
 
-//    private Runnable taskRunnable = new Runnable() {
-//        @Override
-//        public void run() {
-//
-//            Date now = new Date();
-//            long unixTime1 = now.getTime() / 1000L;
-//            if (unixTime1 == unixTime){
-//                Toast.makeText(BackgroundService.this, "wow", Toast.LENGTH_SHORT).show();
-//                String phoneNumber = "923010617687"; // Replace with the phone number you want to send a message to
-//                String message = "Hello, World!"; // Replace with the message you want to send
-//
-//                SmsManager smsManager = SmsManager.getDefault();
-//                smsManager.sendTextMessage(phoneNumber, null, message, null, null);
-//
-//            }
-////            Toast.makeText(getApplicationContext(), "Unix time is: " + unixTime, Toast.LENGTH_SHORT).show();
-//            handler.postDelayed(this, 1000);
-//        }
-//    };
-
-//    @Override
+    //    @Override
 //    public void onDestroy() {
 //        super.onDestroy();
 //        handler.removeCallbacks(taskRunnable);
 //    }
-private Notification createNotification() {
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-        NotificationChannel channel = new NotificationChannel("channel_id", "Time Tracking Service", NotificationManager.IMPORTANCE_DEFAULT);
-        NotificationManager notificationManager = getSystemService(NotificationManager.class);
-        notificationManager.createNotificationChannel(channel);
-    }
+    private Notification createNotification() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationChannel channel = new NotificationChannel("channel_id", "Time Tracking Service", NotificationManager.IMPORTANCE_DEFAULT);
+            NotificationManager notificationManager = getSystemService(NotificationManager.class);
+            notificationManager.createNotificationChannel(channel);
+        }
 
-    Intent notificationIntent = new Intent(this, MainActivity.class);
-    //missing mutability flag
-    PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, PendingIntent.FLAG_IMMUTABLE);
+        Intent notificationIntent = new Intent(this, MainActivity.class);
+        //missing mutability flag
+        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, PendingIntent.FLAG_IMMUTABLE);
 
-    return new NotificationCompat.Builder(this, "channel_id")
-            .setContentTitle("Time Tracking Service")
-            .setContentText("Running in the background")
+        return new NotificationCompat.Builder(this, "channel_id")
+                .setContentTitle("Time Tracking Service")
+                .setContentText("Running in the background")
 //            .setSmallIcon(R.drawable.ic_notification)
-            .setContentIntent(pendingIntent)
-            .build();
-}
-
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        handler.removeCallbacksAndMessages(null);
+                .setContentIntent(pendingIntent)
+                .build();
     }
 }
-
