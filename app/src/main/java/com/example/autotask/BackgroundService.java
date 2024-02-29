@@ -27,7 +27,8 @@ public class BackgroundService extends Service {
         // Start the task when the service starts
 //        scheduleNextExecution();
         startForeground(123, createNotification());
-        unixTime = intent.getLongExtra("unixTime");
+        unixTime = intent.getExtras().getLong("unixTime");
+//        unixTime = intent.getLongExtra("unixTime");
         handler.postDelayed(taskRunnable, 5000);
         return START_STICKY;
     }
