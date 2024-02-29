@@ -21,7 +21,8 @@ import java.security.Provider;
 public class MainActivity extends AppCompatActivity implements TimePickerDialog.OnTimeSetListener{
 
     Button TimePickerButton;
-    long unixTime;
+    private static long unixTime;
+    Intent serviceIntent;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,9 +34,7 @@ public class MainActivity extends AppCompatActivity implements TimePickerDialog.
         TimePickerButton.setOnClickListener(v -> showTimePickerDialog());
 
         BackgroundService service = new BackgroundService();
-        Intent serviceIntent = new Intent(getApplicationContext(), BackgroundService.class);
-        serviceIntent.putExtra("unixTime", unixTime);
-        startService(serviceIntent);
+        serviceIntent = new Intent(getApplicationContext(), BackgroundService.class);
 
 //        service.scheduleNextExecutionFromActivity();
     }
@@ -56,6 +55,8 @@ public class MainActivity extends AppCompatActivity implements TimePickerDialog.
 
         // Convert the selected time to Unix timestamp
         unixTime = calendar.getTimeInMillis() / 1000L;
+        serviceIntent.putExtra("unixTime", unixTime);
+        startService(serviceIntent);
 
         // Display the Unix time in a toast message
 //        Toast.makeText(this, "Unix time is: " + unixTime, Toast.LENGTH_SHORT).show();

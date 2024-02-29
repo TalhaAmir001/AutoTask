@@ -21,7 +21,7 @@ import java.util.Locale;
 public class BackgroundService extends Service {
 
     private Handler handler = new Handler();
-    long unixTime = 0;
+    long unixTime;
     Date now = new Date();
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
@@ -49,6 +49,7 @@ public class BackgroundService extends Service {
             if (unixTime1 == unixTime){
                 Toast.makeText(getApplicationContext(), "Unix time is: " + unixTime, Toast.LENGTH_SHORT).show();
             }
+//            Toast.makeText(getApplicationContext(), "Unix time is: " + unixTime, Toast.LENGTH_SHORT).show();
             handler.postDelayed(this, 1000);
         }
     };
