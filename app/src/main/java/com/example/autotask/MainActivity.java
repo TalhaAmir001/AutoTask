@@ -17,6 +17,7 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.DialogFragment;
 
+import java.util.ArrayList;
 import java.util.Calendar;
 
 import android.app.Service;
@@ -40,6 +41,7 @@ public class MainActivity extends AppCompatActivity implements TimePickerDialog.
     Button TimePickerButton;
     private static long unixTime;
     Intent serviceIntent;
+    ArrayList<String> contactList = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -106,6 +108,7 @@ public class MainActivity extends AppCompatActivity implements TimePickerDialog.
                         if (numberIndex != -1) {
                             String phoneNo = pCur.getString(numberIndex);
                             Log.i(TAG, "Name: " + name);
+                            contactList.add(name);
                             Log.i(TAG, "Phone Number: " + phoneNo);
                             contactsRetrieved = true;
                         }
