@@ -23,12 +23,15 @@ public class BackgroundService extends Service {
 
     private Handler handler = new Handler();
     long unixTime;
+    String contactNumber = "", message = "";
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         // Start the task when the service starts
 //        scheduleNextExecution();
         startForeground(123, createNotification());
         unixTime = intent.getExtras().getLong("unixTime");
+        contactNumber = intent.getExtras().getString("contactNumber");
+        message = intent.getExtras().getString("message");
 //        unixTime = intent.getLongExtra("unixTime");
         handler.postDelayed(new Runnable() {
             @Override
@@ -41,7 +44,9 @@ public class BackgroundService extends Service {
                     String message = "Hello, World!"; // Replace with the message you want to send
 
                     SmsManager smsManager = SmsManager.getDefault();
-                    smsManager.sendTextMessage(phoneNumber, null, message, null, null);
+                    smsManager.sendTextMessage(contactNumber, null, message, null, null);
+
+
 
                     stopSelf();
                     stopForeground(true);

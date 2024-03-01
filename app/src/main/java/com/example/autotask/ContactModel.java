@@ -1,12 +1,14 @@
 package com.example.autotask;
 
+import java.util.ArrayList;
+
 public class ContactModel {
-    private int id;
+    private String  id;
     private String name;
-    private String phoneNumber;
+    private ArrayList<String> phoneNumber;
     private boolean isSelected;
 
-    public ContactModel(int id, String name, String phoneNumber) {
+    public ContactModel(String  id, String name, ArrayList<String> phoneNumber) {
         this.id = id;
         this.name = name;
         this.phoneNumber = phoneNumber;
@@ -14,11 +16,11 @@ public class ContactModel {
     }
 
     // Getters and setters
-    public int getId() {
+    public String  getId() {
         return id;
     }
 
-    public void setId(int id) {
+    public void setId(String id) {
         this.id = id;
     }
 
@@ -30,11 +32,11 @@ public class ContactModel {
         this.name = name;
     }
 
-    public String getPhoneNumber() {
+    public ArrayList<String> getPhoneNumber() {
         return phoneNumber;
     }
 
-    public void setPhoneNumber(String phoneNumber) {
+    public void setPhoneNumber(ArrayList<String> phoneNumber) {
         this.phoneNumber = phoneNumber;
     }
 

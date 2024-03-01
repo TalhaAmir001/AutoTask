@@ -6,9 +6,12 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.Manifest;
+import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.TimePickerDialog;
 import android.content.ContentResolver;
+import android.content.DialogInterface;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.os.Bundle;
@@ -25,13 +28,20 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.provider.ContactsContract;
+import android.telephony.SubscriptionInfo;
+import android.telephony.SubscriptionManager;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
 import android.widget.TimePicker;
 import android.widget.Toast;
 
 import java.security.Provider;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements TimePickerDialog.OnTimeSetListener {
 
@@ -41,6 +51,7 @@ public class MainActivity extends AppCompatActivity implements TimePickerDialog.
     Button TimePickerButton;
     private static long unixTime;
     Intent serviceIntent;
+    private int mSelectedSimSlot = -1;
 
 
     @Override
@@ -56,10 +67,15 @@ public class MainActivity extends AppCompatActivity implements TimePickerDialog.
                     != PackageManager.PERMISSION_GRANTED) {
                 ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.READ_CONTACTS}, MY_PERMISSIONS_REQUEST_READ_CONTACTS);
             } else {
-                contactsList = getContactList();
-                for (ContactModel contact : contactsList) {
-                    Log.d("MainActivity", "ID: " + contact.getId() + ", Name: " + contact.getName() + ", Phone: " + contact.getPhoneNumber());
-                }
+//                getContactList();
+                new ContactRetrievalTask(this, new ContactRetrievalTask.OnContactsRetrievedListener() {
+                    @Override
+                    public void onContactsRetrieved(ArrayList<ContactModel> contacts) {
+                        contactsList = contacts;
+//                        Log.e(TAG, "onContactsRetrieved:12121212121212 "+contactsList.get(0).getName());
+                        showContactDialog();
+                    }
+                }).execute();
             }
 
 //            if (ContextCompat.checkSelfPermission(MainActivity.this, android.Manifest.permission.SEND_SMS)
@@ -73,7 +89,6 @@ public class MainActivity extends AppCompatActivity implements TimePickerDialog.
 
         });
 
-        BackgroundService service = new BackgroundService();
         serviceIntent = new Intent(getApplicationContext(), BackgroundService.class);
 
 //        service.scheduleNextExecutionFromActivity();
@@ -84,48 +99,85 @@ public class MainActivity extends AppCompatActivity implements TimePickerDialog.
         newFragment.show(getSupportFragmentManager(), "timePicker");
     }
 
-    private ArrayList<ContactModel> getContactList() {
-        ArrayList<ContactModel> contactsList = new ArrayList<>();
-        ContentResolver cr = getContentResolver();
-        Cursor cur = cr.query(ContactsContract.Contacts.CONTENT_URI,
-                null, null, null, null);
+    private void showContactDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        LayoutInflater inflater = LayoutInflater.from(this);
+        View dialogView = inflater.inflate(R.layout.dialog_messaging, null);
+        builder.setView(dialogView);
 
-        if (cur != null && cur.getCount() > 0) {
-            while (cur.moveToNext()) {
-                int idIndex = cur.getColumnIndex(ContactsContract.Contacts._ID);
-                int nameIndex = cur.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME);
-                int hasPhoneNumberIndex = cur.getColumnIndex(ContactsContract.Contacts.HAS_PHONE_NUMBER);
+        final RadioGroup radioGroup = dialogView.findViewById(R.id.radioGroup);
+        final EditText messageEditText = dialogView.findViewById(R.id.messageEditText);
 
-                if (idIndex != -1 && nameIndex != -1 && hasPhoneNumberIndex != -1) {
-                    String id = cur.getString(idIndex);
-                    String name = cur.getString(nameIndex);
+        // Populate radio group with contacts
+        for (int i = 0; i < contactsList.size(); i++) {
+            RadioButton radioButton = new RadioButton(this);
+            radioButton.setText(contactsList.get(i).getName());
+            radioButton.setId(i);
+            radioGroup.addView(radioButton);
+        }
 
-                    if (cur.getInt(hasPhoneNumberIndex) > 0) {
-                        Cursor pCur = cr.query(
-                                ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
-                                null,
-                                ContactsContract.CommonDataKinds.Phone.CONTACT_ID + " = ?",
-                                new String[]{id}, null);
-                        while (true) {
-                            assert pCur != null;
-                            if (!pCur.moveToNext()) break;
-                            int numberIndex = pCur.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER);
-                            if (numberIndex != -1) {
-                                String phoneNo = pCur.getString(numberIndex);
-                                ContactModel contact = new ContactModel(Integer.parseInt(id), name, phoneNo);
-                                contactsList.add(contact);
-                            }
-                        }
-                        pCur.close();
-                    }
+        // Get SIM slots
+        SubscriptionManager subscriptionManager = SubscriptionManager.from(this);
+        if (checkReadPhoneStatePermission(MainActivity.this)){
+            List<SubscriptionInfo> subscriptionInfoList = subscriptionManager.getActiveSubscriptionInfoList();
+            if (subscriptionInfoList != null) {
+                for (SubscriptionInfo subscriptionInfo : subscriptionInfoList) {
+                    RadioButton radioButton = new RadioButton(this);
+                    mSelectedSimSlot = subscriptionInfo.getSimSlotIndex();
+                    radioButton.setText("SIM " + (subscriptionInfo.getSimSlotIndex() + 1));
+                    radioButton.setId(subscriptionInfo.getSimSlotIndex());
+                    radioGroup.addView(radioButton);
                 }
             }
-        }
-        if (cur != null) {
-            cur.close();
+        } else {
+            requestReadPhoneStatePermission(MainActivity.this);
         }
 
-        return contactsList;
+        builder.setPositiveButton("Send", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                int selectedContactId = radioGroup.getCheckedRadioButtonId();
+                if (selectedContactId == -1) {
+                    Toast.makeText(MainActivity.this, "Please select a contact", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                String selectedContact = contactsList.get(selectedContactId).getPhoneNumber().get(0);
+                String message = messageEditText.getText().toString();
+
+                if (mSelectedSimSlot == -1) {
+                    Toast.makeText(MainActivity.this, "Please select a SIM slot", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                serviceIntent.putExtra("contactNumber", selectedContact);
+                serviceIntent.putExtra("message", message);
+            if (ContextCompat.checkSelfPermission(MainActivity.this, android.Manifest.permission.SEND_SMS)
+                    != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.SEND_SMS}, 0);
+                Toast.makeText(MainActivity.this, "no", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(MainActivity.this, "yes", Toast.LENGTH_SHORT).show();
+                showTimePickerDialog();
+            }
+                // Perform action with selected contact, sim slot, and message
+                // For example: sendSMS(selectedContact, mSelectedSimSlot, message)
+            }
+        });
+
+        builder.setNegativeButton("Cancel", null);
+
+        builder.show();
+    }
+    public static boolean checkReadPhoneStatePermission(Activity activity) {
+        int permissionCheck = ContextCompat.checkSelfPermission(activity, Manifest.permission.READ_PHONE_STATE);
+        return permissionCheck == PackageManager.PERMISSION_GRANTED;
+    }
+
+    private static final int REQUEST_READ_PHONE_STATE = 123;
+    public static void requestReadPhoneStatePermission(Activity activity) {
+        ActivityCompat.requestPermissions(activity,
+                new String[]{Manifest.permission.READ_PHONE_STATE},
+                REQUEST_READ_PHONE_STATE);
     }
 
 
