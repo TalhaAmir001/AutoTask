@@ -35,7 +35,8 @@ public class BackgroundService extends Service {
             public void run() {
                 Date now = new Date();
                 long unixTime1 = now.getTime() / 1000L;
-                if (unixTime1 == unixTime){
+                if (unixTime1 == unixTime) {
+
                     String phoneNumber = "923010617687"; // Replace with the phone number you want to send a message to
                     String message = "Hello, World!"; // Replace with the message you want to send
 
