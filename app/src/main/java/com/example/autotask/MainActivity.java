@@ -11,9 +11,11 @@ import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.TimePickerDialog;
 import android.content.ContentResolver;
+import android.content.ContentValues;
 import android.content.DialogInterface;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 
 import androidx.core.app.ActivityCompat;
@@ -53,6 +55,9 @@ public class MainActivity extends AppCompatActivity implements TimePickerDialog.
     private static final int MY_PERMISSIONS_REQUEST_READ_CONTACTS = 0;
     private ArrayList<ContactModel> contactsList = new ArrayList<>();
 
+    // Create an instance of ContactsDBHelper
+    ContactsDBHelper dbHelper = new ContactsDBHelper(this);
+
     Button TimePickerButton;
     private static long unixTime;
     Intent serviceIntent;
@@ -76,7 +81,13 @@ public class MainActivity extends AppCompatActivity implements TimePickerDialog.
                 new ContactRetrievalTask(this, new ContactRetrievalTask.OnContactsRetrievedListener() {
                     @Override
                     public void onContactsRetrieved(ArrayList<ContactModel> contacts) {
-                        contactsList = contacts;
+
+//                        for (ContactModel contact : contactsList) {
+//                            System.out.println(contact);
+//                            dbHelper.addContact(contact);
+//                        }
+                          contactsList = contacts;
+//                        contactsList = contacts;
 //                        Log.e(TAG, "onContactsRetrieved:12121212121212 "+contactsList.get(0).getName());
                         showContactDialog();
                     }
