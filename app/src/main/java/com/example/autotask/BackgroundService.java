@@ -14,9 +14,14 @@ import android.widget.Toast;
 
 import androidx.core.app.NotificationCompat;
 
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+
+import java.lang.reflect.Type;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 
 public class BackgroundService extends Service {
@@ -24,13 +29,22 @@ public class BackgroundService extends Service {
     private Handler handler = new Handler();
     long unixTime;
     String contactNumber = "", message = "";
+
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         // Start the task when the service starts
 //        scheduleNextExecution();
         startForeground(123, createNotification());
         unixTime = intent.getExtras().getLong("unixTime");
-        contactNumber = intent.getExtras().getString("contactNumber");
+
+        // Retrieve the serialized selectedContacts list from the intent
+        String selectedContactsJson = intent.getStringExtra("selectedContacts");
+
+        // Deserialize the selectedContacts list
+        Gson gson = new Gson();
+        Type type = new TypeToken<List<String>>() {}.getType();
+        List<String> selectedContacts = gson.fromJson(selectedContactsJson, type);
+
         message = intent.getExtras().getString("message");
 //        unixTime = intent.getLongExtra("unixTime");
         handler.postDelayed(new Runnable() {
@@ -40,13 +54,11 @@ public class BackgroundService extends Service {
                 long unixTime1 = now.getTime() / 1000L;
                 if (unixTime1 == unixTime) {
 
-                    String phoneNumber = "923010617687"; // Replace with the phone number you want to send a message to
-//                    String message = "Hello, World!"; // Replace with the message you want to send
-
                     SmsManager smsManager = SmsManager.getDefault();
-                    smsManager.sendTextMessage(contactNumber, null, message, null, null);
-
-
+                    for (int i = 0; i < selectedContacts.size(); i++) {
+                        contactNumber = selectedContacts.get(i);
+                        smsManager.sendTextMessage(contactNumber, null, message, null, null);
+                    }
 
                     stopSelf();
                     stopForeground(true);

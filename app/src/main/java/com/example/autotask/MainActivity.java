@@ -34,11 +34,16 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.TimePicker;
 import android.widget.Toast;
+
+import com.google.gson.Gson;
 
 import java.security.Provider;
 import java.util.List;
@@ -105,28 +110,44 @@ public class MainActivity extends AppCompatActivity implements TimePickerDialog.
         View dialogView = inflater.inflate(R.layout.dialog_messaging, null);
         builder.setView(dialogView);
 
-        final RadioGroup radioGroup = dialogView.findViewById(R.id.radioGroup);
+        final LinearLayout contactsLayout = dialogView.findViewById(R.id.contactsLayout);
+        final RadioGroup simRadioGroup = dialogView.findViewById(R.id.simRadioGroup);
         final EditText messageEditText = dialogView.findViewById(R.id.messageEditText);
 
-        // Populate radio group with contacts
+        // List to store selected contacts
+        final List<String> selectedContacts = new ArrayList<>();
+
+        // Populate contacts with checkboxes
         for (int i = 0; i < contactsList.size(); i++) {
-            RadioButton radioButton = new RadioButton(this);
-            radioButton.setText(contactsList.get(i).getName());
-            radioButton.setId(i);
-            radioGroup.addView(radioButton);
+            CheckBox checkBox = new CheckBox(this);
+            checkBox.setText(contactsList.get(i).getName());
+            checkBox.setId(i);
+            checkBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                @Override
+                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                    if (isChecked) {
+                        // Add selected contact to the list
+                        selectedContacts.add(contactsList.get(buttonView.getId()).getPhoneNumber().get(0));
+                    } else {
+                        // Remove deselected contact from the list
+                        selectedContacts.remove(contactsList.get(buttonView.getId()).getPhoneNumber().get(0));
+                    }
+                }
+            });
+            contactsLayout.addView(checkBox);
         }
 
-        // Get SIM slots
+        // Populate SIM slots with radio buttons
         SubscriptionManager subscriptionManager = SubscriptionManager.from(this);
-        if (checkReadPhoneStatePermission(MainActivity.this)){
+        if (checkReadPhoneStatePermission(MainActivity.this)) {
             List<SubscriptionInfo> subscriptionInfoList = subscriptionManager.getActiveSubscriptionInfoList();
             if (subscriptionInfoList != null) {
                 for (SubscriptionInfo subscriptionInfo : subscriptionInfoList) {
                     RadioButton radioButton = new RadioButton(this);
-                    mSelectedSimSlot = subscriptionInfo.getSimSlotIndex();
-                    radioButton.setText("SIM " + (subscriptionInfo.getSimSlotIndex() + 1));
-                    radioButton.setId(subscriptionInfo.getSimSlotIndex());
-                    radioGroup.addView(radioButton);
+                    int simSlotIndex = subscriptionInfo.getSimSlotIndex();
+                    radioButton.setText("SIM " + (simSlotIndex + 1));
+                    radioButton.setId(simSlotIndex);
+                    simRadioGroup.addView(radioButton);
                 }
             }
         } else {
@@ -136,32 +157,37 @@ public class MainActivity extends AppCompatActivity implements TimePickerDialog.
         builder.setPositiveButton("Send", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialogInterface, int i) {
-                int selectedContactId = radioGroup.getCheckedRadioButtonId();
-                if (selectedContactId == -1) {
-                    Toast.makeText(MainActivity.this, "Please select a contact", Toast.LENGTH_SHORT).show();
+                int selectedSimSlot = simRadioGroup.getCheckedRadioButtonId();
+                String message = messageEditText.getText().toString();
+
+                if (selectedContacts.isEmpty()) {
+                    Toast.makeText(MainActivity.this, "Please select at least one contact", Toast.LENGTH_SHORT).show();
                     return;
                 }
 
-                String selectedContact = contactsList.get(selectedContactId).getPhoneNumber().get(i);
-                String message = messageEditText.getText().toString();
-
-                if (mSelectedSimSlot == -1) {
+                if (selectedSimSlot == -1) {
                     Toast.makeText(MainActivity.this, "Please select a SIM slot", Toast.LENGTH_SHORT).show();
                     return;
                 }
 
-                serviceIntent.putExtra("contactNumber", selectedContact);
+                // Serialize the selectedContacts list
+                Gson gson = new Gson();
+                String selectedContactsJson = gson.toJson(selectedContacts);
+
+                // Put the serialized list as an extra in the serviceIntent
+                serviceIntent.putExtra("selectedContacts", selectedContactsJson);
                 serviceIntent.putExtra("message", message);
-            if (ContextCompat.checkSelfPermission(MainActivity.this, android.Manifest.permission.SEND_SMS)
-                    != PackageManager.PERMISSION_GRANTED) {
-                ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.SEND_SMS}, 0);
-                Toast.makeText(MainActivity.this, "no", Toast.LENGTH_SHORT).show();
-            } else {
-                Toast.makeText(MainActivity.this, "yes", Toast.LENGTH_SHORT).show();
-                showTimePickerDialog();
-            }
-                // Perform action with selected contact, sim slot, and message
-                // For example: sendSMS(selectedContact, mSelectedSimSlot, message)
+
+                if (ContextCompat.checkSelfPermission(MainActivity.this, android.Manifest.permission.SEND_SMS)
+                        != PackageManager.PERMISSION_GRANTED) {
+                    ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.SEND_SMS}, 0);
+                    Toast.makeText(MainActivity.this, "no", Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(MainActivity.this, "yes", Toast.LENGTH_SHORT).show();
+                    showTimePickerDialog();
+                }
+                // Clear the list of selected contacts
+                selectedContacts.clear();
             }
         });
 
@@ -169,12 +195,15 @@ public class MainActivity extends AppCompatActivity implements TimePickerDialog.
 
         builder.show();
     }
+
+
     public static boolean checkReadPhoneStatePermission(Activity activity) {
         int permissionCheck = ContextCompat.checkSelfPermission(activity, Manifest.permission.READ_PHONE_STATE);
         return permissionCheck == PackageManager.PERMISSION_GRANTED;
     }
 
     private static final int REQUEST_READ_PHONE_STATE = 123;
+
     public static void requestReadPhoneStatePermission(Activity activity) {
         ActivityCompat.requestPermissions(activity,
                 new String[]{Manifest.permission.READ_PHONE_STATE},

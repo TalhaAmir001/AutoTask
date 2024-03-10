@@ -13,18 +13,28 @@
             android:layout_height="match_parent"
             android:orientation="vertical">
 
+            <!-- Contacts -->
+            <LinearLayout
+                android:id="@+id/contactsLayout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+            </LinearLayout>
+
+            <!-- SIM Slots -->
             <RadioGroup
-                android:id="@+id/radioGroup"
+                android:id="@+id/simRadioGroup"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical">
             </RadioGroup>
 
+            <!-- Message EditText -->
             <EditText
                 android:id="@+id/messageEditText"
                 android:layout_width="match_parent"
                 android:layout_height="60dp"
-                android:hint="Write your message"/>
+                android:hint="Write your message" />
 
         </LinearLayout>
 
