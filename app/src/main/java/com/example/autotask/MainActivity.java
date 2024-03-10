@@ -141,7 +141,8 @@ public class MainActivity extends AppCompatActivity implements TimePickerDialog.
                     Toast.makeText(MainActivity.this, "Please select a contact", Toast.LENGTH_SHORT).show();
                     return;
                 }
-                String selectedContact = contactsList.get(selectedContactId).getPhoneNumber().get(0);
+
+                String selectedContact = contactsList.get(selectedContactId).getPhoneNumber().get(i);
                 String message = messageEditText.getText().toString();
 
                 if (mSelectedSimSlot == -1) {

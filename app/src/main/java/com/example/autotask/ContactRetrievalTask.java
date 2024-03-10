@@ -1,5 +1,6 @@
 package com.example.autotask;
 
+import static androidx.constraintlayout.helper.widget.MotionEffect.SOUTH;
 import static androidx.constraintlayout.helper.widget.MotionEffect.TAG;
 
 import android.content.ContentResolver;
@@ -22,6 +23,7 @@ public class ContactRetrievalTask extends AsyncTask<Void, Void, ArrayList<Contac
 
     ArrayList<ContactModel> contactsList = new ArrayList<>();
     ArrayList<String> phoneNumbers = new ArrayList<>();
+
     @Override
     protected ArrayList<ContactModel> doInBackground(Void... voids) {
         ContentResolver cr = mContext.getContentResolver();
@@ -44,6 +46,7 @@ public class ContactRetrievalTask extends AsyncTask<Void, Void, ArrayList<Contac
                                 null,
                                 ContactsContract.CommonDataKinds.Phone.CONTACT_ID + " = ?",
                                 new String[]{id}, null);
+                        ArrayList<String> phoneNumbers = new ArrayList<>(); // Create a new list for each contact
                         while (pCur != null && pCur.moveToNext()) {
                             int numberIndex = pCur.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER);
                             if (numberIndex != -1) {
@@ -54,14 +57,12 @@ public class ContactRetrievalTask extends AsyncTask<Void, Void, ArrayList<Contac
                         if (pCur != null) {
                             pCur.close();
                         }
-//                        Log.e(TAG, "doInBackground:$%$%$%$%$%$$%$%$%%$%$ "+name);
                         contactsList.add(new ContactModel(id, name, phoneNumbers));
                     }
                 }
             }
             cur.close();
         }
-
         return contactsList;
     }
 
