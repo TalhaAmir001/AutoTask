@@ -9,6 +9,7 @@ import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.app.ProgressDialog;
 import android.app.TimePickerDialog;
 import android.content.ContentResolver;
 import android.content.ContentValues;
@@ -23,6 +24,7 @@ import androidx.core.content.ContextCompat;
 import androidx.fragment.app.DialogFragment;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 
 import android.app.Service;
@@ -53,12 +55,13 @@ import java.util.List;
 public class MainActivity extends AppCompatActivity implements TimePickerDialog.OnTimeSetListener {
 
     private static final int MY_PERMISSIONS_REQUEST_READ_CONTACTS = 0;
+    private static final int MY_PERMISSIONS_REQUEST_SEND_SMS = 0;
     private ArrayList<ContactModel> contactsList = new ArrayList<>();
 
-    // Create an instance of ContactsDBHelper
-    ContactsDBHelper dbHelper = new ContactsDBHelper(this);
+    private ContactDBHelper contactDBHelper;
 
     Button TimePickerButton;
+    Button RetriveContactsButton;
     private static long unixTime;
     Intent serviceIntent;
     private int mSelectedSimSlot = -1;
@@ -70,40 +73,59 @@ public class MainActivity extends AppCompatActivity implements TimePickerDialog.
         setContentView(R.layout.activity_main);
 
         TimePickerButton = findViewById(R.id.timePickerButton);
+        RetriveContactsButton = findViewById(R.id.getContactsButton);
 
-        TimePickerButton.setOnClickListener(v -> {
+        contactDBHelper = new ContactDBHelper(this);
+
+        RetriveContactsButton.setOnClickListener(v -> {
 
             if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.READ_CONTACTS)
                     != PackageManager.PERMISSION_GRANTED) {
                 ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.READ_CONTACTS}, MY_PERMISSIONS_REQUEST_READ_CONTACTS);
             } else {
-//                getContactList();
+                // Show a ProgressDialog
+                ProgressDialog progressDialog = new ProgressDialog(MainActivity.this);
+                progressDialog.setCancelable(false); // Optional
+                progressDialog.show();
+
                 new ContactRetrievalTask(this, new ContactRetrievalTask.OnContactsRetrievedListener() {
                     @Override
                     public void onContactsRetrieved(ArrayList<ContactModel> contacts) {
+                        for (int i = 0; i < contacts.size(); i++) {
+                            contactDBHelper.addContact(contacts.get(i));
+                        }
 
-//                        for (ContactModel contact : contactsList) {
-//                            System.out.println(contact);
-//                            dbHelper.addContact(contact);
-//                        }
-                          contactsList = contacts;
-//                        contactsList = contacts;
-//                        Log.e(TAG, "onContactsRetrieved:12121212121212 "+contactsList.get(0).getName());
-                        showContactDialog();
+                        // Dismiss the ProgressDialog
+                        progressDialog.dismiss();
                     }
                 }).execute();
             }
-
-//            if (ContextCompat.checkSelfPermission(MainActivity.this, android.Manifest.permission.SEND_SMS)
-//                    != PackageManager.PERMISSION_GRANTED) {
-//                ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.SEND_SMS}, MY_PERMISSIONS_REQUEST_SEND_SMS);
-//                Toast.makeText(this, "no", Toast.LENGTH_SHORT).show();
-//            } else {
-//                Toast.makeText(this, "yes", Toast.LENGTH_SHORT).show();
-//                showTimePickerDialog();
-//            }
-
         });
+
+        TimePickerButton.setOnClickListener(v -> {
+
+            String[] permissions = new String[]{Manifest.permission.SEND_SMS, Manifest.permission.READ_PHONE_STATE};
+            boolean allPermissionsGranted = true;
+
+            // Check if all permissions are granted
+            for (String permission : permissions) {
+                if (ContextCompat.checkSelfPermission(MainActivity.this, permission) != PackageManager.PERMISSION_GRANTED) {
+                    allPermissionsGranted = false;
+                    break;
+                }
+            }
+
+            if (!allPermissionsGranted) {
+                // Request permissions if not granted
+                ActivityCompat.requestPermissions(MainActivity.this, permissions, MY_PERMISSIONS_REQUEST_SEND_SMS);
+            } else {
+                // Permissions already granted, proceed
+                contactsList = contactDBHelper.getAllContacts();
+                showContactDialog();
+            }
+        });
+
+
 
         serviceIntent = new Intent(getApplicationContext(), BackgroundService.class);
 
@@ -150,7 +172,7 @@ public class MainActivity extends AppCompatActivity implements TimePickerDialog.
 
         // Populate SIM slots with radio buttons
         SubscriptionManager subscriptionManager = SubscriptionManager.from(this);
-        if (checkReadPhoneStatePermission(MainActivity.this)) {
+        if (checkReadPhoneStatePermission(this)) {
             List<SubscriptionInfo> subscriptionInfoList = subscriptionManager.getActiveSubscriptionInfoList();
             if (subscriptionInfoList != null) {
                 for (SubscriptionInfo subscriptionInfo : subscriptionInfoList) {

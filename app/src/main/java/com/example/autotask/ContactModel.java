@@ -15,6 +15,10 @@ public class ContactModel {
         this.isSelected = false; // Initially not selected
     }
 
+    public ContactModel() {
+
+    }
+
     // Getters and setters
     public String  getId() {
         return id;
